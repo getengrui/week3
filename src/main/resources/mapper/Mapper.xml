@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress ALL -->
+<mapper namespace="com.bw.mapper.HouseMapper">
+    <resultMap id="rm" type="com.bw.bean.House">
+        <id property="hid" column="hid"></id>
+        <result column="address" property="address"/>
+        <result column="purpose" property="purpose"/>
+        <result property="acreage" column="acreage"/>
+        <result property="pic" column="pic"/>
+        <association property="owner" javaType="com.bw.bean.Owner" >
+            <id column="id" property="id"/>
+            <result property="gender" column="gender"/>
+            <result property="name" column="name"/>
+            <result property="idcard" column="idcard"/>
+        </association>
+    </resultMap>
+    <select id="select" parameterType="map" resultMap="rm">
+        select * from (
+        select h.*,GROUP_CONCAT(o.name)name from house h,owner o,middle m
+        where h.hid=m.hid and m.oid=o.id group by h.hid)a
+        <where>
+            <if test="purpose > 0">
+                or purpose = ${purpose}
+            </if>
+            <if test="name!=null and name !=''">
+               or name like '%${name}%'
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertHouse" parameterType="com.bw.bean.House" keyProperty="hid" useGeneratedKeys="true" keyColumn="hid">
+        insert into house(address,purpose,acreage,pic)
+        values (#{address},#{purpose},#{acreage},#{pic})
+    </insert>
+    <select id="query" resultType="com.bw.bean.Owner">
+        select * from owner
+    </select>
+
+    <insert id="insertMiddle" parameterType="com.bw.bean.Middle">
+        insert into middle(hid,oid) values(#{hid},#{oid})
+    </insert>
+
+    <delete id="delHouse" parameterType="int">
+        delete from house where hid = #{hid}
+    </delete>
+
+    <delete id="delMiddle" parameterType="int">
+        delete from middle where hid = #{hid}
+    </delete>
+
+    <select id="find" resultMap="rm">
+        select * from (
+                          select h.*,o.* from house h,owner o,middle m
+                          where h.hid=m.hid and m.oid=o.id)a
+        where hid = #{hid}
+    </select>
+
+    <update id="updateHouse" parameterType="com.bw.bean.House">
+        update house set address=#{address},purpose=#{purpose},acreage=#{acreage},pic=#{pic}
+        where hid = #{hid}
+    </update>
+
+    <update id="updateMiddle" parameterType="com.bw.bean.Middle">
+        update middle set oid = #{oid}
+        where hid=#{hid}
+    </update>
+
+
+</mapper>
